@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="Screenmanager%20Fullscreen%20mode" value="1" />
+    <string name="unity.player_session_count">4</string>
+    <int name="Screenmanager%20Resolution%20Height" value="540" />
+    <string name="unity.player_sessionid">4017075578043879791</string>
+    <string name="SaveUID">65%20688%20419</string>
+    <int name="__UNITY_PLAYERPREFS_VERSION__" value="1" />
+    <int name="Screenmanager%20Resolution%20Width" value="960" />
+    <string name="unity.cloud_userid">bbc0436642577aad0bcf291163b3828b</string>
+</map>
