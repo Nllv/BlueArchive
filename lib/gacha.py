@@ -16,4 +16,4 @@ class Gacha(Control):
     def process_gacha_result(self):
         while True:
             if self.search(*GachaCoord.THREE_STAR):
-                pass
+                # pass
