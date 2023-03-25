@@ -180,7 +180,7 @@ class Tutorial(ControlBlueArchive):
         while self.search(*TutorialCoord.PHASE_END):
             self.area_tap(824, 482, 929, 514)
             self.area_tap(543, 277, 588, 304)
-            sleep(1)
+            sleep(2)
         self.process_battle_result()
         self.image_tap(*TutorialCoord.BATTLE_RESULT_OK3)
         self.wait_image(*TutorialCoord.BATTLE_RESULT_OK4)
@@ -218,8 +218,10 @@ class Tutorial(ControlBlueArchive):
     def link_account(self):
         while not self.search(*Home.MENU):
             self.area_tap(890, 16, 936, 38)
+            sleep(0.5)
         while self.search(*Home.MENU):
             self.area_tap(490, 207, 644, 245)
+            sleep(0.5)
         self.wait_image(*Home.ACCOUNT_SETTING)
         while self.search(*Home.ACCOUNT_SETTING) or self.search(*Home.MENU):
             self.area_tap(756, 175, 793, 250)

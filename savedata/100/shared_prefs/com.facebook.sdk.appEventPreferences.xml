@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="kitsBitmask" value="513" />
+    <string name="anonymousAppDeviceGUID">XZd69ac42b-28f0-4280-ad7a-18b9918fb85d</string>
+    <boolean name="is_referrer_updated" value="true" />
+</map>
