@@ -4,9 +4,8 @@ from time import sleep
 import config.config
 from control_emulator.control import Control
 
-from data.coord import Login, Tutorial as TutorialCoord, Gacha
+from data.coord import Login, Tutorial as TutorialCoord, Gacha, Home
 from lib.account_manager import AccountManager
-from lib.tutorial import Tutorial
 
 
 class ControlBlueArchive(Control):
@@ -41,12 +40,17 @@ class ControlBlueArchive(Control):
                     self.close_news()
                     return
                 if args == TutorialCoord.GUEST:
-                    tutorial = Tutorial(self.window_name, self.serial)
-                    tutorial.run()
+                    return
 
     def close_news(self):
         while self.search(*Login.NEWS):
             self.area_tap(845, 64, 870, 85)
+
+    def login_bonus(self):
+        self.wait_image(*Login.LOGIN_BONUS_BG)
+        while self.search(*Login.LOGIN_BONUS_BG):
+            self.area_tap(854, 85, 904, 113)
+            sleep(0.1)
 
     def accept_agreement(self):
         while self.search('image/login/check_mark.bmp') < 2:
@@ -80,13 +84,27 @@ class ControlBlueArchive(Control):
                 self.gacha_skip()
             if self.search(*Gacha.THREE_STAR):
                 pulled_chara.append(self.account_manager.get_gacha_character())
-                if self.search(*Gacha.SKIP):
-                    self.gacha_skip()
-                else:
-                    while not self.search(*Gacha.RESULT_OK):
-                        self.area_tap(27, 25, 102, 101)
-                        sleep(0.2)
-                    self.image_tap(*Gacha.RESULT_OK)
+                # if self.search(*Gacha.SKIP):
+                #     self.gacha_skip()
+                # else:
+                while self.search(*Gacha.THREE_STAR):
+                    self.area_tap(27, 25, 102, 101)
+                    sleep(0.2)
+            if self.search(*Gacha.RESULT_OK):
+                self.image_tap(*Gacha.RESULT_OK)
+                break
+
+    def get_mail(self):
+        if 240 <= self.get_color(884, 12, 1):
+            self.image_tap(*Home.MAIL)
+            while not self.search(*Home.INVENTORY):
+                self.area_tap(786, 484, 917, 519)
+                sleep(1)
+
+    def go_to_home(self):
+        while not self.search(*Home.MOMO_TALK):
+            self.back()
+            sleep(1)
 
 
 if __name__ == '__main__':
@@ -96,5 +114,5 @@ if __name__ == '__main__':
                               emulator_connection[emulator_number]['port'])
     # self.del_save_folder()
     # self.push_save_folder(1)
-    # self.pull_save_folder()
-    self.login(-1)
+    self.pull_save_folder()
+    # self.login(-1)

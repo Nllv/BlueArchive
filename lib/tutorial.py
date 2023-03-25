@@ -2,35 +2,37 @@ import random
 from time import sleep
 
 from config.config import emulator_connection
-from control_emulator.control import Control
+from control_emulator.control import ControlEmulatorError
+from lib.control_ba import ControlBlueArchive
 from data.coord import Tutorial as TutorialCoord, Login, Home, Gacha
 from lib.account_manager import AccountManager
 
 
-class Tutorial(Control):
+class Tutorial(ControlBlueArchive):
     def __init__(self, window_name, serial):
-        super().__init__(serial)
+        super().__init__(window_name, serial)
         self.config_init(working_folder=self.get_root_folder(),
                          window_name=window_name,
                          package_name='com.YostarJP.BlueArchive')
         self.account_manager = AccountManager(window_name)
 
     def run(self):
-        self.create_guest_account()
-        self.tutorial_1()
-        self.tutorial_2()
-        self.tutorial_3()
-        self.tutorial_4()
-
-    def accept_agreement(self):
-        while self.search('image/login/check_mark.bmp') < 2:
-            while not self.search(*Login.FIRST_CHECK_MARK):
-                self.area_tap(122, 378, 141, 397)
-                sleep(1)
-            while not self.search(*Login.SECOND_CHECK_MARK):
-                self.area_tap(579, 378, 601, 399)
-                sleep(1)
-        self.image_tap(*Login.KIYAKU_OK)
+        while True:
+            try:
+                self.login(-1)
+                self.create_guest_account()
+                self.tutorial_1()
+                self.tutorial_2()
+                self.tutorial_3()
+                self.tutorial_4()
+                self.tutorial_5()
+                self.stop_app()
+                self.pull_save_folder()
+            except ControlEmulatorError:
+                self.stop_app()
+                self.is_vpn_connected = False
+            except self.device_errors:
+                self.device_init()
 
     def create_guest_account(self):
         self.image_tap(*TutorialCoord.GUEST)
@@ -54,9 +56,10 @@ class Tutorial(Control):
 
     def skip_talk(self):
         self.wait_images([TutorialCoord.MENU, TutorialCoord.MENU2])
-        while self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.MENU2):
+        # while self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.SKIP):
+        while True:
             if self.search(*TutorialCoord.OK_BUTTON):
-                self.image_tap(*TutorialCoord.OK_BUTTON)
+                self.image_tap(*TutorialCoord.OK_BUTTON, interval=2)
                 break
             elif self.search(*TutorialCoord.SKIP):
                 self.area_tap(*self.img_coord())
@@ -151,26 +154,6 @@ class Tutorial(Control):
         self.wait_image(*TutorialCoord.BATTLE_RESULT_OK)
         self.image_tap(*TutorialCoord.BATTLE_RESULT_OK)
 
-    def gacha_skip(self):
-        self.image_tap(*Gacha.SKIP)
-
-    def process_gacha_result(self):
-        pulled_chara = []
-        while True:
-            if self.search(*Gacha.SKIP) and not self.search(*Gacha.THREE_STAR):
-                self.gacha_skip()
-            if self.search(*Gacha.THREE_STAR):
-                pulled_chara.append(self.account_manager.get_gacha_character())
-                if self.search(*Gacha.SKIP):
-                    self.gacha_skip()
-                else:
-                    while not self.search(*Gacha.RESULT_OK):
-                        self.area_tap(27, 25, 102, 101)
-                        sleep(0.2)
-                    self.image_tap(*Gacha.RESULT_OK)
-                    break
-            sleep(0.1)
-
     def tutorial_4(self):
         self.wait_image(*TutorialCoord.ENTER)
         while not self.search(*TutorialCoord.MISSION_START):
@@ -189,9 +172,56 @@ class Tutorial(Control):
             self.area_tap(466, 318, 540, 360)
         self.process_battle_result()
         self.image_tap(*TutorialCoord.BATTLE_RESULT_OK2)
-        self.image_tap(*TutorialCoord.PHASE_END)
+        self.wait_image(*TutorialCoord.PHASE_END)
+        while self.search(*TutorialCoord.PHASE_END):
+            self.area_tap(824, 482, 929, 514)
+            self.area_tap(543, 277, 588, 304)
+            sleep(1)
+        self.process_battle_result()
+        self.image_tap(*TutorialCoord.BATTLE_RESULT_OK3)
+        self.wait_image(*TutorialCoord.BATTLE_RESULT_OK4)
+        while self.search(*TutorialCoord.BATTLE_RESULT_OK4):
+            self.area_tap(311, 476, 454, 514)
+        self.login_bonus()
+
+    def tutorial_5(self):
+        self.wait_image(*Home.MOMO_TALK)
+        sleep(3)
+        while not self.search(*TutorialCoord.MOMO_TALK_CLOSE):
+            self.area_tap(116, 93, 129, 125)
+            sleep(0.2)
+        while not self.search(*TutorialCoord.YUUKA_ICON):
+            self.area_tap(102, 181, 150, 230)
+            sleep(0.2)
+        while not self.search(*Home.MOMO_TALK):
+            self.back()
+            sleep(0.5)
+        self.daily_mission()
+        self.link_account()
+        self.get_mail()
+
+    def daily_mission(self):
+        self.image_tap(*Home.MISSION)
+        self.wait_image(*TutorialCoord.MISSION_MESSAGE)
+        self.skip_talk()
+        self.wait_image(*Home.ALL_RECEIVE)
+        for _ in range(5):
+            self.area_tap(*self.img_coord())
+        while not self.search(*Home.MOMO_TALK):
+            self.back()
+            sleep(0.5)
+
+    def link_account(self):
+        while not self.search(*Home.MENU):
+            self.area_tap(890, 16, 936, 38)
+        while self.search(*Home.MENU):
+            self.area_tap(490, 207, 644, 245)
+        self.wait_image(*Home.ACCOUNT_SETTING)
+        while self.search(*Home.ACCOUNT_SETTING) or self.search(*Home.MENU):
+            self.area_tap(756, 175, 793, 250)
+            sleep(0.5)
 
 
 if __name__ == '__main__':
     self = Tutorial(emulator_connection[3]['window_name'], emulator_connection[3]['port'])
-    self.skip_talk()
+    self.run()
