@@ -2,7 +2,7 @@ import os
 from time import sleep
 
 import config.config
-from control_emulator.control import Control
+from control_emulator.control import Control, ControlEmulatorError
 
 from data.coord import Login, Tutorial as TutorialCoord, Gacha, Home
 from lib.account_manager import AccountManager
@@ -105,6 +105,10 @@ class ControlBlueArchive(Control):
         while not self.search(*Home.MOMO_TALK):
             self.back()
             sleep(1)
+
+    def check_network_errors(self):
+        if self.search(*Home.NETWORK_ERROR):
+            raise ControlEmulatorError()
 
 
 if __name__ == '__main__':

@@ -47,7 +47,7 @@ class Home:
     ACCOUNT_SETTING = 'image/home/account_setting.bmp', 391, 84, 571, 134, 0.9
     MAIL = 'image/home/mail.bmp', 837, 12, 877, 46, 0.9
     INVENTORY = 'image/home/inventry.bmp', 321, 304, 455, 348, 0.9
-
+    NETWORK_ERROR = 'image/home/network.bmp', 298, 192, 434, 237, 0.9
 
 class Gacha:
     PULL_OK = 'image/home/ok.bmp', 549, 356, 603, 395, 0.9

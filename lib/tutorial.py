@@ -74,6 +74,7 @@ class Tutorial(ControlBlueArchive):
             sleep(1)
         self.wait_image(*TutorialCoord.STR_END)
         while True:
+            self.check_network_errors()
             if self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.MENU2):
                 self.skip_talk()
             elif self.search(*TutorialCoord.RIN):
@@ -88,6 +89,7 @@ class Tutorial(ControlBlueArchive):
 
     def tutorial_2(self):
         while True:
+            self.check_network_errors()
             if self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.MENU2):
                 self.skip_talk()
             elif self.search(*TutorialCoord.RIN):
@@ -95,6 +97,7 @@ class Tutorial(ControlBlueArchive):
                 break
             sleep(0.5)
         while True:
+            self.check_network_errors()
             if self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.MENU2):
                 self.skip_talk()
             elif self.search(*TutorialCoord.RIN):
@@ -105,6 +108,7 @@ class Tutorial(ControlBlueArchive):
 
     def tutorial_3(self):
         while True:
+            self.check_network_errors()
             if self.search(*TutorialCoord.MENU):
                 self.skip_talk()
             self.area_tap(335, 179, 635, 314)
