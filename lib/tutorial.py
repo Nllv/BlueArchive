@@ -1,6 +1,8 @@
 import random
 from time import sleep
 
+from control_emulator.util import wait_by_timezone
+
 from config.config import emulator_connection
 from control_emulator.control import ControlEmulatorError
 from lib.control_ba import ControlBlueArchive
@@ -19,6 +21,7 @@ class Tutorial(ControlBlueArchive):
     def run(self):
         while True:
             try:
+                wait_by_timezone([3, 40, 0], [4, 0, 0])
                 self.login(-1)
                 self.create_guest_account()
                 self.tutorial_1()
@@ -58,6 +61,8 @@ class Tutorial(ControlBlueArchive):
         self.wait_images([TutorialCoord.MENU, TutorialCoord.MENU2])
         # while self.search(*TutorialCoord.MENU) or self.search(*TutorialCoord.SKIP):
         while True:
+            self.check_network_errors()
+            sleep(0.1)
             if self.search(*TutorialCoord.OK_BUTTON):
                 self.image_tap(*TutorialCoord.OK_BUTTON, interval=2)
                 break

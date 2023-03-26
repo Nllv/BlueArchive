@@ -107,8 +107,10 @@ class ControlBlueArchive(Control):
             sleep(1)
 
     def check_network_errors(self):
-        if self.search(*Home.NETWORK_ERROR):
-            raise ControlEmulatorError()
+        img = self.capture()
+        for _error in [Home.NETWORK_ERROR, Home.NETWORK_ERROR2]:
+            if self.search(*_error, src=img):
+                raise ControlEmulatorError()
 
 
 if __name__ == '__main__':
