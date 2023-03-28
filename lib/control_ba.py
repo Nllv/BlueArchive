@@ -32,7 +32,7 @@ class ControlBlueArchive(Control):
             self.area_tap(348, 172, 682, 354)
             sleep(1)
 
-        for args in [Login.KIYAKU_OK, Login.NEWS, TutorialCoord.GUEST]:
+        for args in [Login.KIYAKU_OK, Login.NEWS, TutorialCoord.GUEST, Login.LOGIN_BONUS_BG]:
             if self.search(*args):
                 if args == Login.KIYAKU_OK:
                     self.accept_agreement()
@@ -41,6 +41,8 @@ class ControlBlueArchive(Control):
                     return
                 if args == TutorialCoord.GUEST:
                     return
+                if args == Login.LOGIN_BONUS_BG:
+                    self.login_bonus()
 
     def close_news(self):
         while self.search(*Login.NEWS):
@@ -103,12 +105,14 @@ class ControlBlueArchive(Control):
 
     def go_to_home(self):
         while not self.search(*Home.MOMO_TALK):
+            if self.search(*Login.MENU):
+                self.login(-2)
             self.back()
             sleep(1)
 
     def check_network_errors(self):
         img = self.capture()
-        for _error in [Home.NETWORK_ERROR, Home.NETWORK_ERROR2]:
+        for _error in [Home.NETWORK_ERROR, Home.NETWORK_ERROR2, Login.MENU]:
             if self.search(*_error, src=img):
                 raise ControlEmulatorError()
 

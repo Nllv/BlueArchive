@@ -216,9 +216,7 @@ class Tutorial(ControlBlueArchive):
         self.wait_image(*Home.ALL_RECEIVE)
         for _ in range(5):
             self.area_tap(*self.img_coord())
-        while not self.search(*Home.MOMO_TALK):
-            self.back()
-            sleep(0.5)
+        self.go_to_home()
 
     def link_account(self):
         while not self.search(*Home.MENU):
