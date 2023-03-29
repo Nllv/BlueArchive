@@ -27,7 +27,14 @@ class ControlBlueArchive(Control):
             self.push_save_folder(save_number)
         self.start_app()
 
-        self.wait_image(*Login.MENU)
+        while True:
+            img = self.capture()
+            for _error in [Home.NETWORK_ERROR, Home.NETWORK_ERROR2]:
+                if self.search(*_error, src=img):
+                    raise ControlEmulatorError()
+            if self.search(*Login.MENU, src=img):
+                break
+            sleep(0.5)
         while self.search(*Login.MENU):
             self.area_tap(348, 172, 682, 354)
             sleep(1)
