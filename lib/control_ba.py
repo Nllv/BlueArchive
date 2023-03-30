@@ -10,7 +10,7 @@ from lib.account_manager import AccountManager
 
 class ControlBlueArchive(Control):
     def __init__(self, window_name, serial):
-        super().__init__(serial)
+        super().__init__(window_name, serial)
         self.config_init(working_folder=self.get_root_folder(),
                          window_name=window_name,
                          package_name='com.YostarJP.BlueArchive')
