@@ -21,7 +21,7 @@ class Model(WindowImage):
         # config.config.window_name = 'Arknights'
         config.config.window_name = 'EleSto1'
         # config.config.window_name = 'LDPlayer-3'
-        self.hwnd = self.get_hwnd('LDPlayer-5')
+        self.hwnd = self.get_hwnd('LDPlayer-7')
 
         # PIL画像オブジェクトを参照
         super().__init__()

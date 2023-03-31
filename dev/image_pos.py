@@ -7,6 +7,8 @@ from config import config
 # from data.filters import HSVFilters
 from control_emulator.image import WindowImage
 
+from data.filters import HSVFilters
+
 
 def get_image_pos(template, src=None, threshold=0.9, luminance=False, is_triming=False, hsvfilter=None):
     os.chdir(config.working_folder)
@@ -20,6 +22,8 @@ def get_image_pos(template, src=None, threshold=0.9, luminance=False, is_triming
         img = cv2.imread(template, 0)
 
     im = WindowImage()
+    im.hwnd = im.get_hwnd('LDPlayer-7')
+
     res = im.search(template, 0, 0, 0, 0, threshold, debug=True, src=src, hsvfilter=hsvfilter)
     # res = im.search(template, *Large.SKILL_BAR, threshold=threshold, debug=True, src=src)
     print("size w:{} h:{}".format(im.w, im.h))
@@ -50,8 +54,8 @@ def get_image_pos(template, src=None, threshold=0.9, luminance=False, is_triming
 
 
 if __name__ == '__main__':
-    _temp = 'image/gacha/star.bmp'
-    file = 'gacha_result_tokucho/3441.bmp'
-    hsvfilter = HSVFilters.GACHA_RESULT_STAR
-    # file = None
+    _temp = 'image/home/three_star.bmp'
+    hsvfilter = HSVFilters.STAR_FOOTBAR
+    # file = 'gacha_result_tokucho/3441.bmp'
+    file = None
     get_image_pos(_temp, threshold=0.9, luminance=False, src=file, hsvfilter=hsvfilter)

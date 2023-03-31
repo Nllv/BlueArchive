@@ -210,7 +210,7 @@ class Tutorial(ControlBlueArchive):
         self.get_mail()
 
     def daily_mission(self):
-        self.image_tap(*Home.MISSION)
+        self.image_tap(*Home.MISSION, interval=2)
         self.wait_image(*TutorialCoord.MISSION_MESSAGE)
         self.skip_talk()
         self.wait_image(*Home.ALL_RECEIVE)

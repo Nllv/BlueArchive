@@ -49,6 +49,8 @@ class Home:
     INVENTORY = 'image/home/inventry.bmp', 321, 304, 455, 348, 0.9
     NETWORK_ERROR = 'image/home/network.bmp', 298, 192, 434, 237, 0.9
     NETWORK_ERROR2 = 'image/home/network2.bmp', 342, 252, 466, 294, 0.9
+    NO_MAIL = 'image/home/no_mail.bmp', 468, 343, 680, 400, 0.9
+    STUDENT_LIST = 'image/home/student_list.bmp', 56, 65, 172, 107, 0.9
 
 
 class Gacha:

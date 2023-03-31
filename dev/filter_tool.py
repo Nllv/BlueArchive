@@ -1,9 +1,7 @@
 import numpy as np
 
-import config.config
-from data import filters
 from lib.hsvfilter import HsvFilter
-from lib.image import WindowImage
+from control_emulator.image import WindowImage
 import cv2
 
 
@@ -161,8 +159,9 @@ def _apply_hsv_filter(original_image, hsv_filter=None):
 
 
 if __name__ == '__main__':
-    config.config.window_name = 'LDPlayer-2'
     self = WindowImage()
+    self.hwnd = self.get_hwnd('LDPlayer-7')
+
     init_gui()
     # img = cv2.imread('juren.bmp')
     while True:
