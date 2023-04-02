@@ -36,11 +36,13 @@ class Tutorial:
     MOMO_TALK_CLOSE = 'image/tutorial/momo_talk_close.bmp', 819, 68, 862, 110, 0.9
     YUUKA_ICON = 'image/tutorial/yuuka_icon.bmp', 164, 155, 230, 219, 0.9
     MISSION_MESSAGE = 'image/tutorial/mission_message.bmp', 356, 202, 608, 252, 0.9
+    STUDENT_KOBETSU = 'image/tutorial/student_kobetsu.bmp', 67, -5, 159, 39, 0.9
+    STUDENT_MESSAGE1 = 'image/tutorial/student1.bmp', 277, 258, 529, 313, 0.9
 
 
 class Home:
     OK = 'image/home/ok.bmp', 549, 356, 603, 395, 0.9
-    MOMO_TALK = 'image/home/momo_talk.bmp', 106, 90, 143, 127, 0.9
+    MOMO_TALK = 'image/home/momo_talk.bmp', 106, 90, 143, 127, 0.8
     ALL_RECEIVE = 'image/home/all_receive.bmp', 801, 481, 912, 525, 0.9
     MISSION = 'image/home/mission.bmp', 28, 149, 70, 201, 0.9
     MENU = 'image/home/menu.bmp', 424, 139, 531, 193, 0.9
@@ -50,7 +52,11 @@ class Home:
     NETWORK_ERROR = 'image/home/network.bmp', 298, 192, 434, 237, 0.9
     NETWORK_ERROR2 = 'image/home/network2.bmp', 342, 252, 466, 294, 0.9
     NO_MAIL = 'image/home/no_mail.bmp', 468, 343, 680, 400, 0.9
-    STUDENT_LIST = 'image/home/student_list.bmp', 56, 65, 172, 107, 0.9
+    STUDENT_LIST = 'image/home/student_list.bmp', 59, 68, 173, 99, 0.9
+    BUY_STONE = 'image/home/buy_stone.bmp', 102, 152, 146, 197, 0.9
+    CODE = 'image/home/code.bmp', 417, 119, 542, 160, 0.9
+    STUDENT = 'image/home/student.bmp', 224, 460, 269, 511, 0.9
+    GACHA = 'image/home/gacha.bmp', 658, 484, 711, 532, 0.9
 
 
 class Gacha:
@@ -58,3 +64,6 @@ class Gacha:
     SKIP = 'image/gacha/skip.bmp', 843, 15, 939, 58, 0.9
     THREE_STAR = 'image/gacha/three_star.bmp', 42, 401, 97, 470, 0.9
     RESULT_OK = 'image/home/ok.bmp', 454, 454, 508, 493, 0.9
+    RESULT_OK2 = 'image/home/ok.bmp', 353, 454, 407, 493, 0.9
+    LIMITED_PICK_UP_2 = 'image/gacha/limited_pickup_2.bmp', 447, 200, 776, 254, 0.95
+    STONE_LESS = 'image/gacha/stone_less.bmp', 286, 216, 491, 259, 0.9

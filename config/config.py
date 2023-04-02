@@ -6,3 +6,5 @@ emulator_connection = {3: {'window_name': 'LDPlayer-3', 'port': '127.0.0.1:5561'
                        5: {'window_name': 'LDPlayer-5', 'port': '127.0.0.1:5565'},
                        6: {'window_name': 'LDPlayer-6', 'port': '127.0.0.1:5567'},
                        7: {'window_name': 'LDPlayer-7', 'port': '127.0.0.1:5569'}}
+
+do_task = 'farming'

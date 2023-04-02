@@ -185,7 +185,7 @@ if __name__ == '__main__':
         # cv2.imshow('detect', detected_image)
         # print('fps: {}'.format(1 / (time() - start)))
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            # cv2.imwrite('{}.png'.format(time_stamp()), output_image)
+            # cv2.imwrite('{}.png'.format(time_stamp.csv()), output_image)
             break
     print('{}, {}, {}, {}, {}, {}, {}, {}, {}, {}'.format(cv2.getTrackbarPos('HMin', 'tool'),
                                                           cv2.getTrackbarPos('SMin', 'tool'),

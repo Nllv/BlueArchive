@@ -54,8 +54,9 @@ def get_image_pos(template, src=None, threshold=0.9, luminance=False, is_triming
 
 
 if __name__ == '__main__':
-    _temp = 'image/home/three_star.bmp'
-    hsvfilter = HSVFilters.STAR_FOOTBAR
-    # file = 'gacha_result_tokucho/3441.bmp'
-    file = None
+    _temp = 'image/gacha/star.bmp'
+    # hsvfilter = HSVFilters.STAR_FOOTBAR
+    hsvfilter = None
+    file = 'image/gacha/three_star.bmp'
+    # file = None
     get_image_pos(_temp, threshold=0.9, luminance=False, src=file, hsvfilter=hsvfilter)

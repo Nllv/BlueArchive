@@ -4,7 +4,7 @@ import shutil
 import cv2
 import numpy as np
 from control_emulator.image import WindowImage
-from control_emulator.util import img_crop, get_save_list, time_print, fill_rect_with_black
+from control_emulator.util import img_crop, get_save_list, time_print, fill_rect_with_black, read_csv
 
 from data.filters import HSVFilters
 from lib.draw_text import cv2_putText
@@ -13,6 +13,7 @@ from lib.draw_text import cv2_putText
 class AccountManager(WindowImage):
     def __init__(self, window_name=None):
         super().__init__(window_name)
+        self.limited_chara = ['ホシノ(水着)', 'ミカ', 'ムツキ(正月)', 'アル(正月)', 'マリー(体操服)', 'ユウカ(体操服)']
 
         self.pulled_chara_folder = 'image/ssr/pulled_chara'
         result_img_files = os.listdir(self.pulled_chara_folder)
@@ -32,7 +33,7 @@ class AccountManager(WindowImage):
         coord = [304, 68, 448, 244]
         get_chara_img = self.capture(*coord)
         for ssr in self.result_ssr:
-            if self.search(self.result_ssr[ssr], src=get_chara_img):
+            if self.search(self.result_ssr[ssr], src=get_chara_img, threshold=0.8):
                 return ssr
         else:
             cnt = 1
@@ -135,13 +136,12 @@ class AccountManager(WindowImage):
             return _img
 
         charas = self.find_chara(save_number)
-        limited_chara = ['ホシノ(水着)', 'ミカ', 'ムツキ(正月)', 'アル(正月)', 'マリー(体操服)', 'ユウカ(体操服)']
         th_chara_list = [
-            add_limited_text_to_img(chara) for chara in charas if chara in limited_chara
+            add_limited_text_to_img(chara) for chara in charas if chara in self.limited_chara
         ]
         th_chara_list += [
             self.imread(f'image/ssr/for_thumbnail/{chara}.png', is_jpn=True)
-            for chara in charas if chara not in limited_chara
+            for chara in charas if chara not in self.limited_chara
         ]
         splitted_th_chara_list = [th_chara_list[i:i + row] for i in range(0, len(th_chara_list), row)]
         v_img = None
@@ -179,9 +179,66 @@ class AccountManager(WindowImage):
             cnt += 1
             add_file_path = f'gacha_result/{save_number}_{cnt}.png'
 
+    def limited_sord(self, chara_list):
+        _l = [chara for chara in chara_list if chara in self.limited_chara]
+        _l += [chara for chara in chara_list if chara not in self.limited_chara]
+        return _l
+
+    def get_charalist_for_gametrade(self, save_number: int):
+        for chara in self.limited_sord(self.find_chara(save_number)):
+            print(f'・{chara}')
+
+    def write_chara_data_to_csv(self):
+        def get_file_modified_time(filename):
+            """
+            ファイルの更新日時をエポック秒で取得する関数
+            Args:
+                filename (str): 取得するファイルのパス
+            Returns:
+                int: ファイルの更新日時を表すエポック秒
+            """
+            return int(os.path.getmtime(filename))
+
+        save_list = get_save_list()
+
+        time_stamp_csv = read_csv('csv/time_stamp.csv')
+        time_stamp_csv = sorted(time_stamp_csv, key=lambda x: x[0])
+
+        account_list_csv = read_csv('csv/chara.csv')
+        account_list_csv = sorted(account_list_csv, key=lambda x: x[0])
+
+        time_stamp = {
+            line[0]: line[1] for line in time_stamp_csv
+        }
+        account = {
+            line[0]: line[2:] for line in account_list_csv
+        }
+
+        find_save_list = []
+        for save in save_list:
+            file_path = f'gacha_result/{save}.png'
+            if not os.path.isfile(file_path):
+                continue
+            epoch_time = get_file_modified_time(file_path)
+            if save not in time_stamp or time_stamp[save] < epoch_time:
+                time_stamp[save] = epoch_time
+                find_save_list.append(save)
+        for index, save in enumerate(find_save_list):
+            time_print(f'{index}/{len(find_save_list)}')
+            charas = self.find_chara(save)
+            account[save] = charas
+
+        with open('csv/chara.csv', mode='w', encoding='UTF-8') as f:
+            for save in account:
+                f.write(f'{save}, {len(account[save])}, {", ".join(account[save])}\n')
+        with open('csv/time_Stamp.csv', mode='w', encoding='UTF-8') as f:
+            for save in time_stamp:
+                f.write(f'{save}, {time_stamp[save]}\n')
 
 if __name__ == '__main__':
     self = AccountManager('LDPlayer-7')
     # self.screen_shot('gacha_result/3005.png')
-    # self.make_data_have_chara()
-    self.create_thumbnail(3005, 5)
+    self.make_data_have_chara()
+    # self.write_chara_data_to_csv()
+    # self.create_thumbnail(3053, 5)
+    # self.get_charalist_for_gametrade(3005)
