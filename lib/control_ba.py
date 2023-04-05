@@ -1,7 +1,8 @@
 import os
+from datetime import timedelta
 from time import sleep, time
 
-from control_emulator.util import f_time, img_crop, read_csv
+from control_emulator.util import f_time, img_crop, read_csv, time_print
 
 import config.config
 from control_emulator.control import Control, ControlEmulatorError
@@ -9,6 +10,7 @@ from control_emulator.control import Control, ControlEmulatorError
 from data.coord import Login, Tutorial as TutorialCoord, Gacha, Home
 from data.filters import HSVFilters
 from lib.account_manager import AccountManager
+from lib.sqlitedb import SQLiteDB
 
 
 class ControlBlueArchive(Control):
@@ -18,7 +20,37 @@ class ControlBlueArchive(Control):
                          window_name=window_name,
                          package_name='com.YostarJP.BlueArchive')
         self.account_manager = AccountManager(window_name)
+        self.sqlite = SQLiteDB('blue_archive.db')
         self.save = -1
+
+    def record_login(self, save_number, is_transaction=True):
+        if is_transaction:
+            # トランザクションの開始
+            self.sqlite.exclusive_transaction()
+
+        # SQL文
+        now = self.sqlite.get_now_dt()
+        self.sqlite.execute('INSERT OR REPLACE INTO logins (save_id, updated_at) VALUES (?, ?)', (save_number, now))
+        self.sqlite.execute('INSERT OR REPLACE INTO logins2 (save_id) VALUES (?)', (save_number,))
+
+        # トランザクションの終了
+        self.sqlite.conn.commit()
+
+    def remove_record_login(self, save_number, is_transaction=True):
+        if is_transaction:
+            # トランザクションの開始
+            self.sqlite.exclusive_transaction()
+        # SQL文
+        now = self.sqlite.get_now_dt() - timedelta(days=1)
+        self.sqlite.execute('INSERT OR REPLACE INTO logins (save_id, updated_at) VALUES (?, ?)', (save_number, now))
+        self.sqlite.execute(f'DELETE FROM logins2 where save_id = {save_number}')
+        self.sqlite.commit()
+
+    def add_soldout(self, save_number):
+        # トランザクションの開始
+        self.sqlite.exclusive_transaction()
+        self.sqlite.execute('INSERT OR REPLACE INTO soldout (save_id) VALUES (?)', (save_number,))
+        self.sqlite.commit()
 
     def login(self, save_number=-1):
         self.vpn_init()
@@ -65,6 +97,12 @@ class ControlBlueArchive(Control):
                         self.login_bonus()
                 sleep(0.1)
 
+    def reboot_emulator(self):
+        self.is_vpn_connected = False
+        self.device_class.ld_command(['reboot', '--name', self.window_name])
+        sleep(30)
+        self.device_init()
+
     def close_news(self):
         while self.search(*Login.NEWS):
             self.area_tap(845, 64, 870, 85)
@@ -110,6 +148,8 @@ class ControlBlueArchive(Control):
                     sleep(0.2)
             if self.search(*Gacha.SKIP, src=img) and not self.search(*Gacha.THREE_STAR, src=img):
                 self.gacha_skip()
+                self.wait_images([['image/gacha/star.bmp', 10, 391, 83, 492, 0.9], Gacha.RESULT_OK])
+                sleep(0.5)
             elif self.search(*Gacha.THREE_STAR, src=img):
                 pulled_chara.append(self.account_manager.get_gacha_character())
                 # if self.search(*Gacha.SKIP):
@@ -126,11 +166,15 @@ class ControlBlueArchive(Control):
                 self.image_tap(*Gacha.RESULT_OK2, interval=2)
                 break
             sleep(0.1)
+            self.check_network_errors()
         return pulled_chara
 
     def get_mail(self):
         if 240 <= self.get_color(884, 12, 1):
-            self.image_tap(*Home.MAIL)
+            while not self.search('image/home/all_receive.bmp', 801, 481, 900, 525, 0.9):
+                self.area_tap(839, 19, 876, 38)
+                sleep(1)
+                self.check_network_errors()
             while not self.search(*Home.INVENTORY) and not self.search(*Home.NO_MAIL):
                 self.area_tap(786, 484, 917, 519)
                 sleep(1)
@@ -158,6 +202,9 @@ class ControlBlueArchive(Control):
             raise ControlEmulatorError()
 
     def check_student(self):
+        def go_to_student():
+            self.image_tap(*Home.STUDENT, interval=3)
+
         def skip_first_arona_talk():
             self.wait_image(*Home.STUDENT_LIST)
             while self.search(*Home.STUDENT_LIST):
@@ -170,13 +217,13 @@ class ControlBlueArchive(Control):
                 while not self.search(*Home.BUY_STONE):
                     self.area_tap(638, 89, 765, 117)
                     self.area_tap(*home_pos)
-                self.image_tap(*Home.STUDENT, interval=2)
+                go_to_student()
 
                 # 装備
                 skip_first_arona_talk()
                 while not self.search(*Home.BUY_STONE):
                     self.area_tap(*home_pos)
-                self.image_tap(*Home.STUDENT, interval=2)
+                go_to_student()
 
                 # スキル
                 skip_first_arona_talk()
@@ -184,10 +231,10 @@ class ControlBlueArchive(Control):
                     self.area_tap(519, 238, 582, 316)
                     self.area_tap(845, 245, 878, 309)
                     self.area_tap(*home_pos)
-                self.image_tap(*Home.STUDENT, interval=2)
+                go_to_student()
 
         self.go_to_home()
-        self.image_tap(*Home.STUDENT, interval=2)
+        go_to_student()
         self.wait_image(*Home.STUDENT_LIST)
         sleep(2)
         tutorial()
@@ -216,32 +263,46 @@ class ControlBlueArchive(Control):
                     cnt += 1
                 else:
                     break
-        mutex = self.lock(5)
-        with open('csv/chara.csv', mode='a', encoding='UTF-8') as f:
-            chara_str = ', '.join(charas)
-            f.write(f'{self.save}, {len(charas)}, {chara_str}\n')
-        self.unlock(mutex)
 
-    def gacha(self, gacha_type:str, gacha_tar:str):
+        self.register_character_info(self.save, charas)
+        # mutex = self.lock(5)
+        # chara_csv = read_csv('csv/chara.csv')
+        # chara_csv = [line for line in chara_csv if self.save not in line]
+        # chara_csv.append([self.save, len(charas)] + charas)
+        # chara_csv.sort(key=lambda x: x[0])
+        # with open('csv/chara.csv', mode='w', encoding='UTF-8') as f:
+        #     for line in chara_csv:
+        #         write_str = f'{line[0]}, {line[1]}, {", ".join(line[2:])}\n'
+        #         f.write(write_str)
+        #     # chara_str = ', '.join(charas)
+        #     # f.write(f'{self.save}, {len(charas)}, {chara_str}\n')
+        # self.unlock(mutex)
+
+    def gacha(self, gacha_type:str, gacha_tar=None):
         """
         ガチャを引く
         :param gacha_type: Coord形式
         :param gacha_tar: キャラ名
         :return:
         """
+        if gacha_tar:
+            all_account_info = self.account_manager.get_all_account_info()
+            if self.save in all_account_info and gacha_tar in all_account_info[self.save]:
+                return
         pulled_chara = []
         self.go_to_home()
-        self.image_tap(*Home.GACHA)
+        self.image_tap(*Home.GACHA, interval=5)
         while not self.search(*gacha_type):
             self.area_tap(6, 274, 25, 299)
             sleep(0.5)
 
-        for pos in [[706, 360, 901, 416], [487, 362, 665, 417]]:
+        for pos in [[706, 360, 901, 416]]:
+        # for pos in [[706, 360, 901, 416], [487, 362, 665, 417]]:
             while True:
                 self.wait_image(*gacha_type)
                 while not self.search(*Gacha.PULL_OK):
                     self.area_tap(*pos)
-                    self.im_sleep(*Gacha.PULL_OK)
+                    self.im_sleep(*Gacha.PULL_OK, sleep_time=2)
                 sleep(2)
                 if self.search(*Gacha.STONE_LESS):
                     while self.search(*Gacha.STONE_LESS):
@@ -251,7 +312,9 @@ class ControlBlueArchive(Control):
                 now_pulled = self.process_gacha_result(single_pull=pos==[487, 362, 665, 417])
                 pulled_chara += now_pulled
                 if gacha_tar in pulled_chara:
+                    time_print(pulled_chara)
                     return
+        time_print(pulled_chara)
 
     def get_cooperation_code(self):
         self.go_to_home()
@@ -284,19 +347,47 @@ class ControlBlueArchive(Control):
         self.device.clipboard = None
         while not self.device.clipboard:
             self.area_tap(638, 289, 683, 309)
+            sleep(2)
         _code = self.device.clipboard
-        with open('csv/code.csv', encoding='UTF-8', mode='a') as f:
-            f.write(f'{self.save}, {_id}, {_code}\n')
+
+        self.sqlite.exclusive_transaction()
+        self.sqlite.execute(
+            'INSERT OR REPLACE INTO accounts (save_id, cooperation_id, cooperation_code) VALUES (?, ?, ?)',
+            (self.save, _id, _code)
+        )
+        self.sqlite.commit()
+        # with open('csv/code.csv', encoding='UTF-8', mode='a') as f:
+        #     f.write(f'{self.save}, {_id}, {_code}\n')
+
+    def register_character_info(self, save_id: int, characters: list):
+        self.sqlite.exclusive_transaction()
+        for chara in characters:
+            if chara in self.account_manager.limited_chara:
+                is_limited = 1
+            else:
+                is_limited = 0
+            self.sqlite.execute(
+                'INSERT OR REPLACE INTO characters (save_id, character_name, is_limited) VALUES (?, ?, ?)',
+                (save_id, chara, is_limited)
+            )
+        self.sqlite.commit()
+
 
 if __name__ == '__main__':
     from config.config import emulator_connection
-    emulator_number = 7
+    emulator_number = 3
     self = ControlBlueArchive(emulator_connection[emulator_number]['window_name'],
                               emulator_connection[emulator_number]['port'])
     # self.del_save_folder()
     # self.push_save_folder(3005)
     # self.pull_save_folder()
-    self.save = 3053
+    chara_csv = read_csv('csv/chara.csv')
+    accounts_number = [account[0] for account in chara_csv]
+    chara_csv = [account[2:] for account in chara_csv]
+    for save_id, characters in zip(accounts_number, chara_csv):
+        self.register_character_info(save_id, characters)
+
+    self.save = 3757
     self.login(self.save)
-    # self.check_student()
+    self.check_student()
     # self.get_cooperation_code()

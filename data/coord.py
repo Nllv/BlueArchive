@@ -65,5 +65,6 @@ class Gacha:
     THREE_STAR = 'image/gacha/three_star.bmp', 42, 401, 97, 470, 0.9
     RESULT_OK = 'image/home/ok.bmp', 454, 454, 508, 493, 0.9
     RESULT_OK2 = 'image/home/ok.bmp', 353, 454, 407, 493, 0.9
-    LIMITED_PICK_UP_2 = 'image/gacha/limited_pickup_2.bmp', 447, 200, 776, 254, 0.95
+    LIMITED_PICK_UP_1 = 'image/gacha/limited_pickup_1.bmp', 450, 206, 766, 250, 0.97
+    LIMITED_PICK_UP_2 = 'image/gacha/limited_pickup_2.bmp', 447, 200, 776, 254, 0.97
     STONE_LESS = 'image/gacha/stone_less.bmp', 286, 216, 491, 259, 0.9

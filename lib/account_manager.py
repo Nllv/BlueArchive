@@ -3,6 +3,7 @@ import shutil
 
 import cv2
 import numpy as np
+import pyperclip
 from control_emulator.image import WindowImage
 from control_emulator.util import img_crop, get_save_list, time_print, fill_rect_with_black, read_csv
 
@@ -13,7 +14,8 @@ from lib.draw_text import cv2_putText
 class AccountManager(WindowImage):
     def __init__(self, window_name=None):
         super().__init__(window_name)
-        self.limited_chara = ['ホシノ(水着)', 'ミカ', 'ムツキ(正月)', 'アル(正月)', 'マリー(体操服)', 'ユウカ(体操服)']
+        self.limited_chara = ['ホシノ(水着)', 'ミカ', 'ムツキ(正月)', 'アル(正月)', 'マリー(体操服)', 'ユウカ(体操服)',
+                              'イズナ(水着)', 'チセ(水着)', 'イオリ(水着)', 'トキ', 'ナギサ']
 
         self.pulled_chara_folder = 'image/ssr/pulled_chara'
         result_img_files = os.listdir(self.pulled_chara_folder)
@@ -33,7 +35,7 @@ class AccountManager(WindowImage):
         coord = [304, 68, 448, 244]
         get_chara_img = self.capture(*coord)
         for ssr in self.result_ssr:
-            if self.search(self.result_ssr[ssr], src=get_chara_img, threshold=0.8):
+            if self.search(self.result_ssr[ssr], src=get_chara_img, threshold=0.85):
                 return ssr
         else:
             cnt = 1
@@ -71,7 +73,7 @@ class AccountManager(WindowImage):
         for ssr in self.have_ssr:
             if self.search(self.have_ssr[ssr], src=img, threshold=0.75):
                 find_chara.append(ssr)
-        return find_chara
+        return list(set(find_chara))
 
     def make_data_have_chara(self):
         save_list = get_save_list()
@@ -126,8 +128,8 @@ class AccountManager(WindowImage):
         """
         def add_limited_text_to_img(chara_name):
             return cv2_putText(self.imread(f'image/ssr/for_thumbnail/{chara_name}.png', is_jpn=True),
-                               '限　定', (22, 115), 'meiryo.ttc', 30, (0, 0, 255), 2,
-                               (255, 255, 255), (0, 120, 131, 151), 0.8, 1)
+                               '限　定', (22, 115), 'meiryo.ttc', 30, (255, 255, 255), 2,
+                               (0, 0, 255), (0, 120, 131, 151), 0.8, 1)
         def mask_stone_and_money(_img):
             money_mask_pos = [608, 9, 673, 26]
             stone_mask_pos = [752, 9, 783, 26]
@@ -179,6 +181,33 @@ class AccountManager(WindowImage):
             cnt += 1
             add_file_path = f'gacha_result/{save_number}_{cnt}.png'
 
+        chara_list_for_description = [f'・{chara}' for chara in charas if chara in self.limited_chara]
+        chara_list_for_description += [f'・{chara}' for chara in charas if chara not in self.limited_chara]
+        _chara_list = ''
+        for desc in chara_list_for_description:
+            _chara_list += f'{desc}\n'
+        description_text = '閲覧していただきありがとうございます。\n' \
+                           'こちらはアニバーサリー限定キャラであるミカと水着ホシノが共存し、\n' \
+                           '他にも限定キャラを所持している初期アカウントです。\n' \
+                           '\n' \
+                           '所持星6キャラ\n' \
+                          f'{_chara_list}\n' \
+                           '所持物資\n' \
+                          '・青輝石 約2万(アカウントバレ対策に下3桁をマスクさせていただいております)\n' \
+            '\n' \
+            'ストーリー進行状況はチュートリアル終了直後。\n' \
+            '誕生日や各種連携は未設定となっております。\n' \
+            '連携コードにてアカウントをお渡しします。\n' \
+            '\n' \
+            '【お願い】アカウント確認後は必ずレビューをお願いします。\n' \
+            'ゲームトレードに不慣れな方がアカウント引き渡し後に\n' \
+            'レビューをされずそのまま連絡が取れなくなる事が数件ありました。\n' \
+            'ゲームトレードのシステム上、レビューは任意事項ではなく必須事項ですのでよろしくお願いします。\n' \
+            '\n' \
+            'APあふれ防止の為、1-1を掃討で消化しているため先生Lvが多少上がっております。'
+        print(description_text)
+        pyperclip.copy(description_text)
+
     def limited_sord(self, chara_list):
         _l = [chara for chara in chara_list if chara in self.limited_chara]
         _l += [chara for chara in chara_list if chara not in self.limited_chara]
@@ -187,6 +216,30 @@ class AccountManager(WindowImage):
     def get_charalist_for_gametrade(self, save_number: int):
         for chara in self.limited_sord(self.find_chara(save_number)):
             print(f'・{chara}')
+
+    def get_all_account_info(self):
+        """
+        chara.csv に格納されているアカウントの所持キャラ一覧を辞書で返す
+        :return:
+        """
+        account_list_csv = read_csv('csv/chara.csv')
+        account_list_csv = sorted(account_list_csv, key=lambda x: x[0])
+        account = {
+            line[0]: line[2:] for line in account_list_csv
+        }
+        return account
+
+    def get_time_stamp_info(self):
+        """
+        time_stamp.csv に収められているファイルごとのエポック秒を辞書で返す
+        :return:
+        """
+        time_stamp_csv = read_csv('csv/time_stamp.csv')
+        time_stamp_csv = sorted(time_stamp_csv, key=lambda x: x[0])
+        time_stamp = {
+            line[0]: line[1] for line in time_stamp_csv
+        }
+        return time_stamp
 
     def write_chara_data_to_csv(self):
         def get_file_modified_time(filename):
@@ -201,18 +254,8 @@ class AccountManager(WindowImage):
 
         save_list = get_save_list()
 
-        time_stamp_csv = read_csv('csv/time_stamp.csv')
-        time_stamp_csv = sorted(time_stamp_csv, key=lambda x: x[0])
-
-        account_list_csv = read_csv('csv/chara.csv')
-        account_list_csv = sorted(account_list_csv, key=lambda x: x[0])
-
-        time_stamp = {
-            line[0]: line[1] for line in time_stamp_csv
-        }
-        account = {
-            line[0]: line[2:] for line in account_list_csv
-        }
+        account = self.get_all_account_info()
+        time_stamp = self.get_time_stamp_info()
 
         find_save_list = []
         for save in save_list:
@@ -220,7 +263,7 @@ class AccountManager(WindowImage):
             if not os.path.isfile(file_path):
                 continue
             epoch_time = get_file_modified_time(file_path)
-            if save not in time_stamp or time_stamp[save] < epoch_time:
+            if save not in time_stamp or save not in account or time_stamp[save] < epoch_time:
                 time_stamp[save] = epoch_time
                 find_save_list.append(save)
         for index, save in enumerate(find_save_list):
@@ -228,17 +271,23 @@ class AccountManager(WindowImage):
             charas = self.find_chara(save)
             account[save] = charas
 
+        sorted_account_list = sorted(account.items())
+        account = dict(sorted_account_list)
         with open('csv/chara.csv', mode='w', encoding='UTF-8') as f:
             for save in account:
                 f.write(f'{save}, {len(account[save])}, {", ".join(account[save])}\n')
+
+        sorted_time_stamp_list = sorted(time_stamp.items())
+        time_stamp = dict(sorted_time_stamp_list)
         with open('csv/time_Stamp.csv', mode='w', encoding='UTF-8') as f:
             for save in time_stamp:
                 f.write(f'{save}, {time_stamp[save]}\n')
 
+
 if __name__ == '__main__':
     self = AccountManager('LDPlayer-7')
     # self.screen_shot('gacha_result/3005.png')
-    self.make_data_have_chara()
-    # self.write_chara_data_to_csv()
-    # self.create_thumbnail(3053, 5)
+    # self.make_data_have_chara()
+    self.write_chara_data_to_csv()
+    # self.create_thumbnail(3757, 5)
     # self.get_charalist_for_gametrade(3005)
